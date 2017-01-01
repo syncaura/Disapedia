@@ -75,3 +75,4 @@ hs_err_pid*
 
 # Custom export data
 settings.json
+!src/main/resources/settings.json
