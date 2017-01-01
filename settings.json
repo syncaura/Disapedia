@@ -1,0 +1,10 @@
+{
+    "token": "MjY0NTU1NjU0NTUzOTI3Njgx.C0ia-Q.gxYWJ-yRHuBmI649GfWRjaoHxFw",
+    "displayName": "Disapedia",
+    "status": "the wiki search!",
+    "channels": [
+        "wiki_search"
+    ],
+    "commandKey": "/",
+    "deleteCommandInput": true
+}
