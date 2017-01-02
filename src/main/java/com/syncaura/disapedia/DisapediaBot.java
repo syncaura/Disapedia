@@ -2,6 +2,7 @@ package com.syncaura.disapedia;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.syncaura.disapedia.config.Settings;
 import com.syncaura.disapedia.discord.Client;
 import com.syncaura.disapedia.listeners.CommandProcessorListener;
 import com.syncaura.disapedia.listeners.WikiCommandListener;
@@ -35,6 +36,14 @@ public class DisapediaBot {
      * Entry point of the application
      **/
     public static void main(String[] args) throws Exception {
+        try {
+            login(loadSettingsFromDisk());
+        } catch (DiscordException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static Settings loadSettingsFromDisk() throws Exception {
         GsonBuilder gsonBuilder = new GsonBuilder();
         Gson gson = gsonBuilder.create();
 
@@ -50,11 +59,7 @@ public class DisapediaBot {
             throw new Exception("Failed to parse settings file or it not contain an API token!");
         }
 
-        try {
-            login(settings);
-        } catch (DiscordException e) {
-            e.printStackTrace();
-        }
+        return settings;
     }
 
     public static void login(Settings settings) throws DiscordException {
@@ -75,6 +80,16 @@ public class DisapediaBot {
         return settings;
     }
 
+    public boolean reloadSettings() {
+        try {
+            settings = loadSettingsFromDisk();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private void setup() {
         try {
             // TODO: Add in a display name option to change bot name and make sure the status changes also
@@ -89,5 +104,4 @@ public class DisapediaBot {
         new CommandProcessorListener(this);
         new WikiCommandListener(this);
     }
-
 }

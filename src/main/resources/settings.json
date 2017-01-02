@@ -1,14 +1,16 @@
 {
-    "token": "TOKEN_HERE",
-    "displayName": "Disapedia",
-    "status": "the wiki search!",
-    "channels": [
-        "wiki_search"
-    ],
-    "commandKey": "!",
-    "deleteCommandInput": false,
-    "wiki": {
-        "apiBaseUrl": "{wikiName}.gamepedia.com/api.php",
-        "defaultWiki": "astroneer"
-    }
+  "token": "TOKEN_HERE",
+  "displayName": "Disapedia",
+  "status": "the wiki search!",
+  "channels": [
+    "wiki_search"
+  ],
+  "commandKey": "!",
+  "deleteCommandInput": false,
+  "wiki": {
+    "apiBaseUrl": "http://{subWikiName}.gamepedia.com",
+    "subWikiName": "astroneer",
+    "resultLimit": 10,
+    "language": "en"
+  }
 }

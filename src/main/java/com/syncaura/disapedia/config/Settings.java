@@ -15,9 +15,12 @@ public class Settings {
     private String displayName;
     private String status;
     private List<String> channels;
+
+    @SuppressWarnings("FieldCanBeLocal")
     private String commandKey = "!"; // Default this
+
     private boolean deleteCommandInput;
-    private Wiki wiki;
+    private WikiData wiki;
 
     /**
      * This will load from the disk every time this is called so make sure that we are only calling this when it's needed
@@ -42,7 +45,7 @@ public class Settings {
     /**
      * Gets the discord bot API token
      *
-     * @return
+     * @return API Token
      */
     public String getToken() {
         return token;
@@ -86,5 +89,9 @@ public class Settings {
 
     public boolean shouldDeleteCommandInput() {
         return deleteCommandInput;
+    }
+
+    public WikiData getWikiData() {
+        return wiki;
     }
 }
