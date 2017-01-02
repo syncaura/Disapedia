@@ -17,6 +17,7 @@ public class SearchResult {
 
     public SearchResult(JsonArray search) throws Exception {
         this.query = search.get(0).getAsString();
+
         Gson gson = new Gson();
 
         this.matchedElements = gson.fromJson(search.get(1).toString(), String[].class);

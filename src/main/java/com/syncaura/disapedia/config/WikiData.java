@@ -8,7 +8,7 @@ package com.syncaura.disapedia.config;
 @SuppressWarnings("FieldCanBeLocal")
 public class WikiData {
 
-    private String apiBaseUrl; // TODO: Default this to Wikipedia?
+    private String apiBaseUrl = "https://en.wikipedia.org/w/"; // We want to use wikipedia for the default one
 
     private String subWikiName = ""; // By default let's not include a sub wiki
 

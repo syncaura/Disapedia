@@ -53,7 +53,7 @@ public class DisapediaBot {
             throw new Exception("Settings file could not be found!");
         }
 
-        Settings settings = gson.fromJson(new InputStreamReader(settingsFile), Settings.class);
+        Settings settings = gson.fromJson(new InputStreamReader(settingsFile), Settings.class);     
 
         if (settings == null || settings.getToken().equalsIgnoreCase("")) {
             throw new Exception("Failed to parse settings file or it not contain an API token!");

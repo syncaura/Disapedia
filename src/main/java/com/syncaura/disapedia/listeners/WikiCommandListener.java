@@ -6,6 +6,7 @@ import com.syncaura.disapedia.events.CommandExecutionEvent;
 import com.syncaura.disapedia.wiki.MediaWiki;
 import com.syncaura.disapedia.wiki.SearchResult;
 import sx.blah.discord.api.events.IListener;
+import sx.blah.discord.handle.impl.obj.Message;
 import sx.blah.discord.handle.impl.obj.PrivateChannel;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IPrivateChannel;
@@ -16,6 +17,7 @@ import sx.blah.discord.util.MessageBuilder;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 
 /**
@@ -50,12 +52,17 @@ public class WikiCommandListener implements IListener<CommandExecutionEvent> {
             EnumSet<Permissions> userPermissions = event.getBy().getPermissionsForGuild(event.getMessage().getGuild());
 
             // TODO: Make these use classes instead of methods... could get messy otherwise
+            // TODO: REALLY CAL, THIS NEEDS TO CHANGE SOON.
             switch (event.getSubCommand()) {
                 case "search":
                     handleSearchCommand(messageBuilder, event);
                     break;
                 case "help":
-                    handleHelpCommand(event.getMessage().getChannel());
+                    handleHelpCommand(event.getMessage().getChannel(), event.getBy());
+                    event.getMessage().delete(); // We always want to delete the help command..
+                    break;
+                case "current":
+                    handleCurrentCommand(event);
                     break;
                 case "settings":
                     if (!userPermissions.contains(Permissions.MANAGE_SERVER)) {
@@ -68,6 +75,10 @@ public class WikiCommandListener implements IListener<CommandExecutionEvent> {
                     messageBuilder.withContent("Could not determine sub command, please type !wiki help for a list of sub commands.").send();
                     break;
             }
+
+            if (bot.getSettings().shouldDeleteCommandInput() && !event.getMessage().isDeleted()) {
+                event.getMessage().delete();
+            }
         } catch (RateLimitException e) {
             e.printStackTrace();
         } catch (DiscordException e) {
@@ -77,12 +88,33 @@ public class WikiCommandListener implements IListener<CommandExecutionEvent> {
         }
     }
 
-    private void handleHelpCommand(IChannel channel) throws RateLimitException, DiscordException, MissingPermissionsException {
-        StringBuilder helpBuilder = new StringBuilder("Disapedia is a discord bot that allows you to search wiki pages for topics/resources of your interest. Disapedia has the following commands:");
-        helpBuilder.append("\n\n!wiki help - Displays help message to users");
-        helpBuilder.append("\n!wiki search <query> - Searches the default (configured) wiki for that topic/resource");
+    private void handleHelpCommand(IChannel channel, IUser by) throws RateLimitException, DiscordException, MissingPermissionsException {
+        MessageBuilder message = new MessageBuilder(bot.getClient());
 
-        new MessageBuilder(bot.getClient()).withChannel(channel).withContent(helpBuilder.toString()).send();
+        message.withChannel(bot.getClient().getOrCreatePMChannel(by));
+
+        message.withContent("Disapedia is a discord bot that allows you to search wiki pages for topics/resources of your interest.");
+        message.appendContent("\nAvailable commands:", MessageBuilder.Styles.UNDERLINE_BOLD);
+        message.appendContent("\n\n!wiki help - Displays help message to you");
+        message.appendContent("\n!wiki help <user> - Displays help message to user that you specify. Example: @Disapedia#2685");
+        message.appendContent("\n!wiki search <query> - Searches the default (configured) wiki for that topic/resource");
+
+        if (by.getPermissionsForGuild(channel.getGuild()).contains(Permissions.MANAGE_SERVER)) {
+            message.appendContent("\n!wiki settings reload - Reloads the configuration file");
+            message.appendContent("\n!wiki settings get <jsonKey> - Gets value in settings.json at the specified key.");
+        }
+
+        message.appendContent("\n").appendContent("Created by the syncaura team with :heart: | https://syncaura.com", MessageBuilder.Styles.ITALICS);
+
+        message.send();
+    }
+
+    private void handleCurrentCommand(CommandExecutionEvent event) throws RateLimitException, DiscordException, MissingPermissionsException {
+        MessageBuilder messageBuilder = new MessageBuilder(bot.getClient());
+        messageBuilder.withChannel(event.getMessage().getChannel()); // We want to send this message in the current channel as it's info
+        messageBuilder.withContent("Disapedia is currently searching the following wiki: ");
+        messageBuilder.appendContent(bot.getSettings().getWikiData().getWikiUrl(), MessageBuilder.Styles.UNDERLINE_BOLD);
+        messageBuilder.send();
     }
 
     private void handleSearchCommand(MessageBuilder messageBuilder, CommandExecutionEvent event) throws RateLimitException, DiscordException, MissingPermissionsException {
@@ -114,16 +146,35 @@ public class WikiCommandListener implements IListener<CommandExecutionEvent> {
     private void handleSettingsCommand(CommandExecutionEvent event) {
         try {
             if (!event.hasArgs()) {
-                handleHelpCommand(event.getMessage().getChannel());
+                handleHelpCommand(event.getMessage().getChannel(), event.getBy());
                 return;
             }
             String subCommand = event.getArgs()[0];
             switch (subCommand) {
                 case "reload":
+                    long beforeReloadTime = System.currentTimeMillis();
                     bot.reloadSettings();
                     new MessageBuilder(bot.getClient())
                             .withChannel(event.getMessage().getChannel())
-                            .withContent("Reloaded settings file for Disapedia!", MessageBuilder.Styles.BOLD)
+                            .withContent("Reloaded settings file for Disapedia in " + (System.currentTimeMillis() - beforeReloadTime) + "ms!", MessageBuilder.Styles.BOLD)
+                            .send();
+                    break;
+                case "set":
+                    break;
+                case "get":
+                    MessageBuilder messageBuilder = new MessageBuilder(bot.getClient())
+                            .withChannel(event.getMessage().getChannel());
+
+                    String[] args = Arrays.copyOfRange(event.getArgs(), 1, event.getArgs().length);
+                    if (args.length == 0) {
+                        messageBuilder.withContent("Please specify the option to retrieve from settings!")
+                                .send();
+                        return; // We need than that
+                    }
+                    messageBuilder.withContent("Value of '")
+                            .appendContent(String.join(" ", args), MessageBuilder.Styles.BOLD)
+                            .appendContent("' is set to:\n")
+                            .appendContent(bot.getSettings().getValueByJsonKey(args[0]))
                             .send();
                     break;
             }

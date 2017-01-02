@@ -8,8 +8,8 @@
   "commandKey": "!",
   "deleteCommandInput": false,
   "wiki": {
-    "apiBaseUrl": "http://{subWikiName}.gamepedia.com",
-    "subWikiName": "astroneer",
+    "apiBaseUrl": "https://{subWikiName}.wikipedia.org/w/",
+    "subWikiName": "en",
     "resultLimit": 10,
     "language": "en"
   }

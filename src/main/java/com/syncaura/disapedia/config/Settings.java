@@ -1,7 +1,13 @@
 package com.syncaura.disapedia.config;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import jdk.nashorn.internal.ir.annotations.Ignore;
+
 import java.io.*;
 import java.nio.file.*;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -33,7 +39,7 @@ public class Settings {
         if (savedSettings.exists()) {
             try {
                 return new FileInputStream(savedSettings);
-            } catch(Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 return null;
             }
@@ -94,4 +100,51 @@ public class Settings {
     public WikiData getWikiData() {
         return wiki;
     }
+
+    public String getValueByJsonKey(String jsonKey) {
+        if (jsonKey.equalsIgnoreCase("token")) {
+            return null; // We don't wanna return this now do we
+        }
+        Gson gson = new Gson();
+
+        String json = gson.toJson(this);
+
+        JsonObject parsedSettings = gson.fromJson(json, JsonObject.class);
+
+        return getValueByJsonKey(jsonKey, parsedSettings);
+    }
+
+    public String getValueByJsonKey(String keyToFind, JsonObject json) {
+        try {
+            if (keyToFind.equalsIgnoreCase("*")) {
+                if (json.has("token")) {
+                    json.remove("token");
+                }
+                return json.toString();
+            }
+
+            String jsonKey = keyToFind;
+
+            if (jsonKey.contains(".")) {
+                jsonKey = jsonKey.split("\\.")[0]; // Always take the left hand side of the string...
+            }
+
+            JsonElement element = json.get(jsonKey);
+
+            if (element == null || element.isJsonNull()) {
+                return null;
+            }
+
+            if (element.isJsonObject() && keyToFind.contains(".")) {
+                String[] splitKeys = keyToFind.split("\\.");
+                return getValueByJsonKey(String.join(".", (CharSequence[]) Arrays.copyOfRange(splitKeys, 1, splitKeys.length)), (JsonObject) element);
+            }
+
+            return element.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null; // We didn't find it
+        }
+    }
+
 }
